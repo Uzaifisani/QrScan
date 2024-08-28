@@ -6,16 +6,84 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code Scanner, Verifier, and Logger</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h2 {
+            color: #007BFF;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #output {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #28a745;
+        }
+
+        table {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            h2 {
+                font-size: 1.5em;
+            }
+
+            #output {
+                font-size: 1em;
+            }
+
+            table, th, td {
+                font-size: 0.9em;
+            }
+        }
+    </style>
 </head>
 
 <body>
     <h2>Scan and Verify QR Code:</h2>
-    <video id="video" width="300" height="300" style="border: 1px solid black;"></video>
+    <video id="video"></video>
     <canvas id="canvas" hidden></canvas>
     <p id="output">Point your camera at a QR code to scan.</p>
 
     <h2>Scanned QR Code Log:</h2>
-    <table id="qrLogTable" border="1">
+    <table id="qrLogTable">
         <thead>
             <tr>
                 <th>Time</th>
@@ -27,83 +95,7 @@
         </tbody>
     </table>
 
-    <script>
-        let lastScannedQRCode = ""; // Variable to store the last scanned QR code value
-
-        function startVideo() {
-            navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: "environment"
-                    }
-                })
-                .then(function(stream) {
-                    video.srcObject = stream;
-                    video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
-                    video.play();
-                    requestAnimationFrame(tick);
-                })
-                .catch(function(err) {
-                    console.error("Error accessing the camera: " + err);
-                    alert("Unable to access the camera. Please try again.");
-                });
-        }
-
-        function tick() {
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                canvasElement.hidden = false;
-                canvasElement.height = video.videoHeight;
-                canvasElement.width = video.videoWidth;
-                canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
-                const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert",
-                });
-
-                if (code) {
-                    const scannedQRCode = code.data; // Store the scanned value in the variable
-
-                    if (scannedQRCode !== lastScannedQRCode) {
-                        output.textContent = `QR Code Data: ${scannedQRCode}`;
-                        logQRCode(scannedQRCode); // Log the scanned QR code value with time
-                        lastScannedQRCode = scannedQRCode; // Update the last scanned value
-
-                        // Display success message and reset scanner
-                        setTimeout(() => {
-                            output.textContent = "Scan successful! Ready to scan another QR code.";
-                            resetScanner(); // Reset the scanner for the next QR code
-                        }, 2000); // Show the success message for 2 seconds
-                    }
-                }
-            }
-            requestAnimationFrame(tick);
-        }
-
-        function logQRCode(qrValue) {
-            const table = document.getElementById("qrLogTable").getElementsByTagName('tbody')[0];
-            const newRow = table.insertRow(); // Insert a new row into the table
-
-            const timeCell = newRow.insertCell(0); // Insert a new cell for time
-            const qrValueCell = newRow.insertCell(1); // Insert a new cell for QR code value
-
-            const currentTime = new Date().toLocaleTimeString(); // Get current time
-
-            timeCell.textContent = currentTime; // Set the time cell's content
-            qrValueCell.textContent = qrValue; // Set the QR code value cell's content
-        }
-
-        function resetScanner() {
-            canvasElement.hidden = true;
-            video.srcObject.getTracks().forEach(track => track.stop()); // Stop the video stream
-            startVideo(); // Restart the video stream
-        }
-
-        // Initialize video for scanning
-        const video = document.getElementById('video');
-        const canvasElement = document.getElementById('canvas');
-        const canvas = canvasElement.getContext('2d');
-        const output = document.getElementById('output');
-        startVideo();
-    </script>
+<script src="working.js"></script>
 </body>
 
 </html>
